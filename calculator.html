@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #1c1c2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .page-title {
+            color: rgba(255,255,255,0.25);
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+       
+        .calc-box {
+            width: 320px;
+            background: #252540;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+        }
+
+       
+        .screen {
+            background: #1a1a2e;
+            padding: 28px 22px 20px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+
+        .screen .prev-line {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 13px;
+            color: rgba(255,255,255,0.3);
+            min-height: 20px;
+            word-break: break-all;
+            text-align: right;
+            margin-bottom: 6px;
+        }
+
+        .screen .main-num {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 42px;
+            font-weight: 500;
+            color: #ffffff;
+            word-break: break-all;
+            text-align: right;
+            line-height: 1.1;
+            transition: font-size 0.1s;
+        }
+
+        .screen .main-num.big { font-size: 42px; }
+        .screen .main-num.medium { font-size: 30px; }
+        .screen .main-num.small { font-size: 22px; }
+
+      
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: #1a1a2e;
+            padding: 1px;
+        }
+
+        .btn-grid button {
+            border: none;
+            padding: 20px 10px;
+            font-size: 16px;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 500;
+            cursor: pointer;
+            background: #252540;
+            color: #ccc;
+            transition: background 0.1s, transform 0.08s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-grid button:hover {
+            background: #2e2e50;
+        }
+
+        .btn-grid button:active {
+            transform: scale(0.91);
+            background: #333360;
+        }
+
+       
+        .btn-grid button.fn-btn {
+            background: #3a3a5c;
+            color: #a0a0c8;
+            font-size: 15px;
+        }
+
+        .btn-grid button.fn-btn:hover { background: #44446a; }
+
+        
+        .btn-grid button.op-btn {
+            background: #e74c3c;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .btn-grid button.op-btn:hover { background: #c0392b; }
+        .btn-grid button.op-btn:active { background: #a93226; }
+
+       
+        .btn-grid button.eq-btn {
+            background: #e74c3c;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .btn-grid button.eq-btn:hover { background: #c0392b; }
+
+       
+        .btn-grid button.zero-btn {
+            grid-column: span 2;
+            text-align: left;
+            padding-left: 28px;
+        }
+
+    </style>
+</head>
+<body>
+
+<p class="page-title">Calculator</p>
+
+<div class="calc-box">
+
+    
+    <div class="screen">
+        <div class="prev-line" id="prevLine"></div>
+        <div class="main-num big" id="mainDisplay">0</div>
+    </div>
+
+   
+    <div class="btn-grid">
+
+        
+        <button class="fn-btn" onclick="clearAll()">AC</button>
+        <button class="fn-btn" onclick="flipSign()">+/-</button>
+        <button class="fn-btn" onclick="doPercent()">%</button>
+        <button class="op-btn" onclick="pickOp('/')">÷</button>
+
+       
+        <button onclick="pressNum('7')">7</button>
+        <button onclick="pressNum('8')">8</button>
+        <button onclick="pressNum('9')">9</button>
+        <button class="op-btn" onclick="pickOp('*')">×</button>
+
+        
+        <button onclick="pressNum('4')">4</button>
+        <button onclick="pressNum('5')">5</button>
+        <button onclick="pressNum('6')">6</button>
+        <button class="op-btn" onclick="pickOp('-')">−</button>
+
+       
+        <button onclick="pressNum('1')">1</button>
+        <button onclick="pressNum('2')">2</button>
+        <button onclick="pressNum('3')">3</button>
+        <button class="op-btn" onclick="pickOp('+')">+</button>
+
+       
+        <button class="zero-btn" onclick="pressNum('0')">0</button>
+        <button onclick="pressDot()">.</button>
+        <button class="eq-btn" onclick="getResult()">=</button>
+
+    </div>
+</div>
+
+<script>
+
+    
+    var currentVal = '0';
+    var savedVal = '';
+    var chosenOp = null;
+    var freshCalc = false;
+
+    var display = document.getElementById('mainDisplay');
+    var prevLine = document.getElementById('prevLine');
+
+   
+    function refreshDisplay() {
+        display.textContent = currentVal;
+
+        
+        var len = currentVal.length;
+        display.className = 'main-num';
+        if (len > 12) {
+            display.classList.add('small');
+        } else if (len > 8) {
+            display.classList.add('medium');
+        } else {
+            display.classList.add('big');
+        }
+    }
+
+   
+    function pressNum(n) {
+        if (freshCalc) {
+            currentVal = n;
+            freshCalc = false;
+        } else {
+            if (currentVal === '0' && n !== '.') {
+                currentVal = n;
+            } else {
+                if (currentVal.length >= 14) return; 
+                currentVal += n;
+            }
+        }
+        refreshDisplay();
+    }
+
+   
+    function pressDot() {
+        if (freshCalc) {
+            currentVal = '0.';
+            freshCalc = false;
+            refreshDisplay();
+            return;
+        }
+        if (currentVal.includes('.')) return; 
+        currentVal += '.';
+        refreshDisplay();
+    }
+
+   
+    function pickOp(op) {
+       
+        if (chosenOp && !freshCalc) {
+            getResult(true);
+        }
+
+        savedVal = currentVal;
+        chosenOp = op;
+        freshCalc = false;
+
+       
+        var symbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+        prevLine.textContent = savedVal + ' ' + symbols[op];
+
+        currentVal = '0';
+        refreshDisplay();
+    }
+
+    
+    function getResult(chain) {
+        if (!chosenOp || savedVal === '') return;
+
+        var a = parseFloat(savedVal);
+        var b = parseFloat(currentVal);
+        var answer;
+
+        if (chosenOp === '+') answer = a + b;
+        else if (chosenOp === '-') answer = a - b;
+        else if (chosenOp === '*') answer = a * b;
+        else if (chosenOp === '/') {
+            if (b === 0) {
+                currentVal = 'Error';
+                chosenOp = null;
+                savedVal = '';
+                prevLine.textContent = '';
+                refreshDisplay();
+                return;
+            }
+            answer = a / b;
+        }
+
+        var symbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+
+        if (!chain) {
+            prevLine.textContent = savedVal + ' ' + symbols[chosenOp] + ' ' + currentVal + ' =';
+        }
+
+       
+        answer = parseFloat(answer.toFixed(10));
+        currentVal = answer.toString();
+
+        if (!chain) {
+            chosenOp = null;
+            savedVal = '';
+            freshCalc = true;
+        } else {
+            savedVal = currentVal;
+        }
+
+        refreshDisplay();
+    }
+
+    
+    function clearAll() {
+        currentVal = '0';
+        savedVal = '';
+        chosenOp = null;
+        freshCalc = false;
+        prevLine.textContent = '';
+        refreshDisplay();
+    }
+
+    
+    function flipSign() {
+        if (currentVal === '0' || currentVal === 'Error') return;
+        if (currentVal.startsWith('-')) {
+            currentVal = currentVal.slice(1);
+        } else {
+            currentVal = '-' + currentVal;
+        }
+        refreshDisplay();
+    }
+
+    function doPercent() {
+        var n = parseFloat(currentVal);
+        if (isNaN(n)) return;
+        currentVal = (n / 100).toString();
+        refreshDisplay();
+    }
+
+    
+    document.addEventListener('keydown', function(e) {
+        var k = e.key;
+
+        if (k >= '0' && k <= '9') pressNum(k);
+        else if (k === '.') pressDot();
+        else if (k === '+') pickOp('+');
+        else if (k === '-') pickOp('-');
+        else if (k === '*') pickOp('*');
+        else if (k === '/') { e.preventDefault(); pickOp('/'); }
+        else if (k === 'Enter' || k === '=') getResult();
+        else if (k === 'Escape') clearAll();
+        else if (k === 'Backspace') {
+            if (currentVal.length > 1 && currentVal !== 'Error') {
+                currentVal = currentVal.slice(0, -1);
+            } else {
+                currentVal = '0';
+            }
+            refreshDisplay();
+        }
+    });
+
+</script>
+</body>
+</html>
